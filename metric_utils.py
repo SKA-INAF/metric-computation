@@ -269,6 +269,7 @@ def split_boxes_by_class(gt_boxes, pred_boxes, classification: str):
         gt_boxes_class[gt_image]['boxes'] = []
 
         for gt_object_box, gt_object_class in zip(gt_boxes[gt_image]['boxes'], gt_boxes[gt_image]['labels']):
+            
             if gt_object_class == classification:
                 gt_boxes_class[gt_image]['boxes'].append(gt_object_box)
 
@@ -276,6 +277,9 @@ def split_boxes_by_class(gt_boxes, pred_boxes, classification: str):
         pred_boxes_class[pred_image] = {}
         pred_boxes_class[pred_image]['boxes'] = []
         pred_boxes_class[pred_image]['scores'] = []
+
+        if 'boxes' not in pred_boxes[pred_image]:
+            x = 2
 
         for pred_object_box, pred_object_score, pred_object_class in \
                 zip(pred_boxes[pred_image]['boxes'], pred_boxes[pred_image]['scores'], pred_boxes[pred_image]['labels']):
@@ -398,3 +402,15 @@ def plot_pr_curve(precisions, recalls, category='Objects',
     ax.set_xlim([0.0,1.3])
     ax.set_ylim([0.0,1.2])
     return ax
+
+
+def rescale_bbox(bbox):
+    bbox[2] += bbox[0]
+    bbox[3] += bbox[1]
+
+    bbox[0] = bbox[0] / w * 800
+    bbox[2] = bbox[2] / w * 800
+    bbox[1] = bbox[1] / h * 800
+    bbox[3] = bbox[3] / h * 800
+
+    return bbox
