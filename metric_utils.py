@@ -396,9 +396,9 @@ def plot_pr_curve(precisions, recalls, category='Objects',
     # ax.scatter(recalls, precisions, label=label, s=20, color=color)
     # ax.scatter(recalls, precisions, label='_nolegend_', s=20, color=color)
     ax.plot(recalls, precisions, label=label, color=color, linestyle=linestyle)
-    ax.set_xlabel('recall')
-    ax.set_ylabel('precision')
-    ax.set_title('Precision-Recall curve for {}'.format(category))
+    ax.set_title('Reliability-Completeness curve for {}'.format(category))
+    ax.set_xlabel('Completeness')
+    ax.set_ylabel('Reliability')
     ax.set_xlim([0.0,1.3])
     ax.set_ylim([0.0,1.2])
     return ax
