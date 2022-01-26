@@ -32,10 +32,10 @@ def parse_paths(txt_path):
     return parsed_list
 
 def main(args):
-    with open(args.gt_file) as infile:
+    with open(args.data_dir / args.gt_json) as infile:
         gt_boxes = json.load(infile)
 
-    with open(args.pred_file) as infile:
+    with open(args.data_dir / args.pred_json) as infile:
         pred_boxes = json.load(infile)
 
     split_gt_boxes = {}
@@ -56,22 +56,25 @@ def main(args):
             if img_name in pred_boxes:
                 split_pred_boxes[img_name] = pred_boxes[img_name]
 
-        with open(f'gt_{split.stem}.json', 'w') as out:
+        with open(args.data_dir / f'gt_{split.stem}.json', 'w') as out:
             json.dump(split_gt_boxes, out)
-        with open(f'pred_{split.stem}.json', 'w') as out:
+        with open(args.data_dir / f'pred_{split.stem}.json', 'w') as out:
             json.dump(split_pred_boxes, out)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--gt_file", default="gt_boxes.json", help="JSON file with ground truth annotations")
-    parser.add_argument("--pred_file", default="rg-boxes@0.9cs.json", help="JSON file with prediction annotations")
-    parser.add_argument("--split_folder", default="snr_splits/test", help="Folder with SNR based split")
+
+    parser.add_argument("--data_dir", default="sample_jsons", help="Directory of JSON files")
+    parser.add_argument("--gt_json", default="gt_boxes.json", help="JSON file with ground truth annotations")
+    parser.add_argument("--pred_json", default="pred_boxes.json", help="JSON file with prediction annotations")
+    parser.add_argument("--split_folder", default="snr_splits", help="Folder with SNR based split")
 
     # Optional argument flag which defaults to False
-    parser.add_argument("--out", default="gt_boxes.json", help="Output JSON file")
 
     args = parser.parse_args()
 
-    main()
+    args.data_dir = Path(args.data_dir)
+
+    main(args)

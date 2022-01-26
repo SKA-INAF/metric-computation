@@ -183,52 +183,52 @@ def main(args):
 
     # Display Results
     # True
-    print('Classes:\t\t', CLASSES[1:])
-    print('True:\t\t\t', true[:,1:])
+    print(f'Classes\t\t {CLASSES[1:]}')
+    print(f'True:\t\t\t {true[:,1:]}')
 
     # Pos (Detections) (TP + FP)
     # iterate over every detected object in every image
 
     pos = compute_pos(pred_boxes)
-    print('Positive Detections:\t', pos[:,1:])
+    print(f'Positive Detections:\t {pos[:,1:]}')
 
 
     # Confusion Matrix
-    print('Confusion Matrix:\n', confusion_matrix[1:,1:])
+    print(f'Confusion Matrix:\n {confusion_matrix[1:,1:]}')
 
 
     # True Positives
-    print('True Positives:\t\t', true_positives[:,1:])
+    print(f'True Positives:\t\t {true_positives[:,1:]}')
                     
     # False Positives:
     false_positives = pos - true_positives
-    print('False Positives:\t', false_positives[:,1:])
+    print(f'False Positives:\t {false_positives[:,1:]}')
 
     # False Negatives:
     false_negatives = true - true_positives
-    print('False Negatives:\t', false_negatives[:,1:])
+    print(f'False Negatives:\t {false_negatives[:,1:]}')
 
     # True Negatives
 
     true_negatives = compute_true_negatives(confusion_matrix)
-    print('True Negatives:\t\t', true_negatives[:,1:])
+    print(f'True Negatives:\t\t {true_negatives[:,1:]}')
 
 
     # Reliability
 
     reliability = compute_reliability(true_positives, pos)
-    print('Reliability:\t\t', reliability[:,1:])
+    print(f'Reliability:\t\t {reliability[:,1:]}')
 
     # Completeness
 
     completeness = compute_completeness(true_positives, true)
-    print('Completeness:\t\t', completeness[:,1:])
+    print(f'Completeness:\t\t {completeness[:,1:]}')
 
     # F1-Score
     # f1_score = 2 * ((reliability * completeness) / (reliability + completeness))
 
     f1_score = compute_f1_score(reliability, completeness)
-    print('F1-Score:\t\t', f1_score[:,1:])
+    print(f'F1-Score:\t\t {f1_score[:,1:]}')
 
 
     reliability: float = true_positives.sum() / pos.sum()
