@@ -37,11 +37,17 @@ In order to run the script, both JSON files has to be provided to the `main.py` 
 The script `from_coco.py` allows for converting data in the required format starting from the common COCO annotation format, which is also in JSON.
 
 ## Run the script
-    ``` bash
-    python main.py --data_dir {path/to/folder_containing_jsons} --gt_json {gt_filename} --pred_json {pred_filename}
-    ```
+``` bash
+python main.py --data_dir {path/to/folder_containing_jsons} --gt_json {gt_filename} --pred_json {pred_filename}
+```
 
 The script `split_snr.py` is used to generate predictions and ground truth files according to the SNR value splits, which are located in the folder `snr_splits`. The arguments to pass are the same, except for `--split_folder` which indicates the snr splits txt files on which the subdivision is based.
-    ``` bash
-    python split_snr.py --data_dir {path/to/folder_containing_jsons} --gt_json {gt_filename} --pred_json {pred_filename} --split_folder snr_splits
-    ```
+``` bash
+python split_snr.py --data_dir {path/to/folder_containing_jsons} --gt_json {gt_filename} --pred_json {pred_filename} --split_folder snr_splits
+```
+
+The metric computation script can also be run for a subset of the test set, for example for a specific SNR range, by 
+utilising the `--snr_file_path` argument
+```bash
+python main.py --data_dir {path/to/folder_containing_jsons} --gt_json {gt_filename} --pred_json {pred_filename} --snr_file_path snr_splits/less_5.txt
+```

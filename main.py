@@ -1,16 +1,18 @@
-
 from __future__ import absolute_import, division, print_function
+from typing import List, Dict
 import argparse
 import json
+import os
+import re
 import time
-import torch
+# import torch
 from metric_functions import *
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from metric_utils import *
 from pathlib import Path
-from typing import List
+
 import copy
 from PIL import Image
 
@@ -45,6 +47,36 @@ def main(args):
     with open(args.data_dir / args.pred_json) as infile:
         pred_boxes = json.load(infile)
 
+    # If an SNR file path has been provided
+    if args.snr_file_path != '' and os.path.isfile(args.snr_file_path):
+        print('SNR file ' + args.snr_file_path + ' applied.')
+        # only keep the images in the specified SNR range
+        images_in_snr: List[str] = []
+        with open(args.snr_file_path) as snr_file:
+            for image in snr_file:
+                # remove new line
+                image_name: str = image.strip()
+                # split by path separator (os.sep or /) and get the file name
+                image_name = re.split(os.sep+r'/', image_name)[-1]
+                # remove the file extension (.json)
+                image_name = image_name.split(r'.')[0]
+                # remove the _mask_ from the middle of the file name
+                image_name_mask: List[str] = image_name.split('_')
+                image_name = image_name_mask[0] + '_' + image_name_mask[2] + '.fits'
+
+                images_in_snr.append(image_name)
+
+        gt_boxes_in_snr: Dict = {}
+        pred_boxes_in_snr: Dict = {}
+
+        for image in images_in_snr:
+            gt_boxes_in_snr[image] = gt_boxes[image]
+            pred_boxes_in_snr[image] = pred_boxes[image]
+
+        gt_boxes = gt_boxes_in_snr
+        pred_boxes = pred_boxes_in_snr
+    else:
+        print('No SNR file applied.')
 
     # Remove missing common predictions (e.g. no object is above the confidence threshold for an image)
     no_pred = get_missing_preds(gt_boxes, pred_boxes)
@@ -102,8 +134,8 @@ def main(args):
         plt.vlines(xval, 0.0, 1.1, color='gray', alpha=0.3, linestyles='dashed')
     end_time = time.time()
     print('\nPlotting and calculating mAP takes {:.4f} secs'.format(end_time - start_time))
-    plt.savefig(args.data_dir / 'PRCurve_50:95')
-    print(f'PR Curve saved at {args.data_dir}')
+    plt.savefig(args.data_dir / 'PRCurve_50-95.png')
+    print(f'PR Curve saved in {args.data_dir}')
 
     # ## Plot RC (PR) Curve per class
 
@@ -156,7 +188,7 @@ def main(args):
     end_time = time.time()
     print('\nPlotting and calculating mAP takes {:.4f} secs'.format(end_time - start_time))
     plt.savefig('PRCurve_per_class')
-    print(f'PR Curve saved at {args.data_dir}')
+    print(f'PR Curve saved in {args.data_dir}')
 
     # ## Calculate TP, FP, FN, TN, Reliability (Precision), Completeness (Recall), and F1-Score
 
@@ -230,7 +262,7 @@ def main(args):
     f1_score = compute_f1_score(reliability, completeness)
     print(f'F1-Score:\t\t {f1_score[:,1:]}')
 
-
+    # Overall (All Classes) Metrics
     reliability: float = true_positives.sum() / pos.sum()
     completeness: float = true_positives.sum() / true.sum()
     f1_score: float = 2 * ((reliability * completeness) / (reliability + completeness))
@@ -239,15 +271,16 @@ def main(args):
     print(f'Completeness: {completeness:.4f}')
     print(f'F1-Score: {f1_score:.4f}')
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data_dir", default="sample_jsons", help="Path of gt and pred files")
-    parser.add_argument("--gt_json", default="gt_boxes.json", help="GT file name")
-    parser.add_argument("--pred_json", default="pred_boxes.json", help="Pred file name")
+    parser.add_argument("--gt_json", default="ground_truth_boxes.json", help="GT file name")
+    parser.add_argument("--pred_json", default="predicted_boxes.json", help="Pred file name")
+    parser.add_argument("--snr_file_path", default="", help="Path to file containing which images to run evaluation on")
 
     args = parser.parse_args()
 
     args.data_dir = Path(args.data_dir)
     main(args)
-
