@@ -38,6 +38,11 @@ COLORS = [
     '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f',
     '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']
 
+def log_console_and_file(msg, filepath):
+    print(msg)
+    with open(filepath, 'a') as o:
+        o.write(msg + '\n')
+
 def main(args):
     # ## Loading gt and pred annotations
 
@@ -88,24 +93,29 @@ def main(args):
     gt_boxes_sidelobe, pred_boxes_sidelobe = split_boxes_by_class(gt_boxes, pred_boxes, 'sidelobe')
     gt_boxes_galaxy, pred_boxes_galaxy = split_boxes_by_class(gt_boxes, pred_boxes, 'galaxy')
 
+    log_console_and_file('MAP', args.data_dir / args.txt_file)
     # Run per class mAP calculation for each class
     iou_thr = 0.5
     # calculate source mAP
     data = get_avg_precision_at_iou(gt_boxes_source, pred_boxes_source, iou_thr=iou_thr)
-    print('Source avg precision: {:.4f}'.format(data['avg_prec']))
+    log_console_and_file('Source avg precision: {:.4f}'.format(data['avg_prec']), args.data_dir / args.txt_file)
+    
     # calculate sidelobe mAP
     data = get_avg_precision_at_iou(gt_boxes_sidelobe, pred_boxes_sidelobe, iou_thr=iou_thr)
-    print('Sidelobe avg precision: {:.4f}'.format(data['avg_prec']))
+    log_console_and_file('Sidelobe avg precision: {:.4f}'.format(data['avg_prec']), args.data_dir / args.txt_file)
+
     # calculate galaxy mAP
     data = get_avg_precision_at_iou(gt_boxes_galaxy, pred_boxes_galaxy, iou_thr=iou_thr)
-    print('Galaxy avg precision: {:.4f}'.format(data['avg_prec']))
+    log_console_and_file('Galaxy avg precision: {:.4f}'.format(data['avg_prec']), args.data_dir / args.txt_file)
 
     # Runs it for one IoU threshold for all predictions
     start_time = time.time()
     data = get_avg_precision_at_iou(gt_boxes, pred_boxes.copy(), iou_thr=iou_thr)
     end_time = time.time()
     print('Single IoU calculation took {:.4f} secs'.format(end_time - start_time))
-    print('avg precision: {:.4f}'.format(data['avg_prec']))
+    # print('avg precision: {:.4f}'.format(data['avg_prec']))
+    log_console_and_file('Total Avg Precision (map): {:.4f}'.format(data['avg_prec']), args.data_dir / args.txt_file)
+    log_console_and_file('\n\n', args.data_dir / args.txt_file)
 
     # ## mAP@0.5:0.95 + Reliability-Completeness (RC) (Precision-Recall (PR)) Curve
 
@@ -249,27 +259,37 @@ def main(args):
     # Reliability
 
     reliability = compute_reliability(true_positives, pos)
-    print(f'Reliability:\t\t {reliability[:,1:]}')
+    # print(f'Reliability:\t\t {reliability[:,1:]}')
+    log_console_and_file(f'METRICS PER CLASS', args.data_dir / args.txt_file)
+    log_console_and_file(f'Reliability (Precision): {reliability[:,1:]}', args.data_dir / args.txt_file)
+
 
     # Completeness
 
     completeness = compute_completeness(true_positives, true)
-    print(f'Completeness:\t\t {completeness[:,1:]}')
+    # print(f'Completeness:\t\t {completeness[:,1:]}')
+    log_console_and_file(f'Completeness (Recall): {completeness[:,1:]}', args.data_dir / args.txt_file)
 
     # F1-Score
     # f1_score = 2 * ((reliability * completeness) / (reliability + completeness))
 
     f1_score = compute_f1_score(reliability, completeness)
-    print(f'F1-Score:\t\t {f1_score[:,1:]}')
+    # print(f'F1-Score:\t\t {f1_score[:,1:]}')
+    log_console_and_file(f'F1-Score: {f1_score[:,1:]}', args.data_dir / args.txt_file)
+    log_console_and_file(f'\n\n', args.data_dir / args.txt_file)
 
     # Overall (All Classes) Metrics
     reliability: float = true_positives.sum() / pos.sum()
     completeness: float = true_positives.sum() / true.sum()
     f1_score: float = 2 * ((reliability * completeness) / (reliability + completeness))
-    print('Total metrics')
-    print(f'Reliability: {reliability:.4f}')
-    print(f'Completeness: {completeness:.4f}')
-    print(f'F1-Score: {f1_score:.4f}')
+    # print('Total metrics')
+    # print(f'Reliability: {reliability:.4f}')
+    # print(f'Completeness: {completeness:.4f}')
+    # print(f'F1-Score: {f1_score:.4f}')
+    log_console_and_file(f'Total metrics', args.data_dir / args.txt_file)
+    log_console_and_file(f'Reliability (P): {reliability:.4f}', args.data_dir / args.txt_file)
+    log_console_and_file(f'Completeness (R): {completeness:.4f}', args.data_dir / args.txt_file)
+    log_console_and_file(f'F1-Score: {f1_score:.4f}', args.data_dir / args.txt_file)
 
 
 if __name__ == '__main__':
@@ -278,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", default="sample_jsons", help="Path of gt and pred files")
     parser.add_argument("--gt_json", default="ground_truth_boxes.json", help="GT file name")
     parser.add_argument("--pred_json", default="predicted_boxes.json", help="Pred file name")
+    parser.add_argument("--txt_file", default="metrics.txt", help="Output file name")
     parser.add_argument("--snr_file_path", default="", help="Path to file containing which images to run evaluation on")
 
     args = parser.parse_args()
