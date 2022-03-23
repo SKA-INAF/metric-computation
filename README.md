@@ -12,7 +12,7 @@ For **predictions**, data must follow the following format:
     {
         "$IMG_NAME": {
             "labels": [$CLASS_NAME: string, ..., $CLASS_NAME: string],
-            "boxes": [[$X1, $X2, $Y1, $Y2], ..., [$X1, $X2, $Y1, $Y2]],
+            "boxes": [[$X1, $Y1, $X2, $Y2], ..., [$X1, $Y1, $X2, $Y2]],
             "scores": [$CONFIDENCE_SCORE: float, ..., $CONFIDENCE_SCORE: float]
         },
 
@@ -20,7 +20,7 @@ For **predictions**, data must follow the following format:
         
         "$IMG_NAME": {
             "labels": [$CLASS_NAME: string, ..., $CLASS_NAME: string],
-            "boxes": [[$X1, $X2, $Y1, $Y2], ..., [$X1, $X2, $Y1, $Y2]],
+            "boxes": [[$X1, $Y1, $X2, $Y2], ..., [$X1, $Y1, $X2, $Y2]],
             "scores": [$CONFIDENCE_SCORE: float, ..., $CONFIDENCE_SCORE: float]
         }
     }
