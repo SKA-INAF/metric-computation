@@ -1,5 +1,5 @@
 import numpy as np
-# import torch
+import torch
 from matplotlib import pyplot as plt
 import copy
 
@@ -44,7 +44,7 @@ def get_iou(gt_box, pred_box) -> float:
     # compute the intersection over union by taking the intersection
     # area and dividing it by the sum of prediction + ground-truth
     # areas - the interesection area
-    iou: float = intersection_area / float(gt_box_area + pred_box_area - intersection_area)
+    iou: float = intersection_area / float(gt_box_area + pred_box_area - intersection_area + 1e-8)
     assert iou >= 0.0
     assert iou <= 1.0
 
@@ -66,7 +66,7 @@ def compute_tp(gt_boxes, pred_boxes, iou_thr=0.6, class_count=3):
         # Loop over all of the ground truth objects for the current image
         for i, (gt_box, gt_label) in enumerate(zip(gt_boxes[gt_box_key]['boxes'], gt_boxes[gt_box_key]['labels'])):     
             # increment true count for the object
-            gt_label_idx = class_name_to_idx[gt_label]
+            gt_label_idx = class_name_to_idx[gt_label.lower()]
             true[0][gt_label_idx] += 1
             
             # Find associations between true and detected objects according to largest IOU
@@ -77,6 +77,10 @@ def compute_tp(gt_boxes, pred_boxes, iou_thr=0.6, class_count=3):
             # iterate over every detected object for the current image
             for j, (pred_box, pred_label, pred_score) in enumerate(zip(pred_boxes[gt_box_key]['boxes'], pred_boxes[gt_box_key]['labels'], pred_boxes[gt_box_key]['scores'])):
                 # calculate the IoU of the ground truth and detection bounding boxes
+                if isinstance(gt_box[0], list):
+                    gt_box = gt_box[0]
+                if isinstance(pred_box[0], list):
+                    pred_box = pred_box[0]
                 iou: float = get_iou(gt_box, pred_box)
 
                 if iou > iou_thr and iou > iou_best: # and score threshold?
@@ -87,7 +91,7 @@ def compute_tp(gt_boxes, pred_boxes, iou_thr=0.6, class_count=3):
             # if a match was found
             if index_best != -1:
                 det_label = pred_boxes[gt_box_key]['labels'][index_best]
-                det_label_idx = class_name_to_idx[det_label]
+                det_label_idx = class_name_to_idx[det_label.lower()]
                 
                 # confusion matrix (for True Negatives)
                 confusion_matrix[gt_label_idx][det_label_idx] += 1
@@ -104,7 +108,7 @@ def compute_pos(pred_boxes):
     for pred_box_key in pred_boxes.keys():
         for pred_label in pred_boxes[pred_box_key]['labels']:
             # increment pos count for the detection
-            pred_label_idx = class_name_to_idx[pred_label]
+            pred_label_idx = class_name_to_idx[pred_label.lower()]
             pos[0][pred_label_idx] += 1
     return pos
                 
