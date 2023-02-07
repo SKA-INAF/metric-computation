@@ -16,6 +16,13 @@ from pathlib import Path
 import copy
 from PIL import Image
 
+RGZ = ['sample4_galaxy', 'sample5_galaxy', 'sample3_source']
+ATCA = ['sample2_source', 'sample10_sidelobe']
+SCORPIO15 = ['sample1_sidelobe', 'sample1_source']
+
+subdatasets = {'RGZ': RGZ, 'ATCA': ATCA, 'SCORPIO15': SCORPIO15}
+
+
 CLASSES = ['No-Object', 'sidelobe', 'source', 'galaxy']
 COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
           [0.494, 0.184, 0.556]]
@@ -51,6 +58,25 @@ def main(args):
 
     with open(args.data_dir / args.pred_json) as infile:
         pred_boxes = json.load(infile)
+
+    keep = []
+    if args.subdataset:
+        for k in gt_boxes.keys():
+            for name in subdatasets[args.subdataset]:
+                if name in k:
+                    keep.append(k)
+
+    # for image in pred_boxes:
+    #     for name in 'sidelobe':
+    #         if name in image:
+    #             to_remove.append(image)
+
+        to_remove = list(set(gt_boxes.keys()) - set(keep))
+        for image in to_remove:
+            if image in gt_boxes:
+                gt_boxes.pop(image)
+            if image in pred_boxes:
+                pred_boxes.pop(image)
 
     # If an SNR file path has been provided
     if args.snr_file_path != '' and os.path.isfile(args.snr_file_path):
@@ -295,11 +321,12 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", default="sample_jsons", help="Path of gt and pred files")
-    parser.add_argument("--gt_json", default="ground_truth_boxes.json", help="GT file name")
-    parser.add_argument("--pred_json", default="predicted_boxes.json", help="Pred file name")
-    parser.add_argument("--txt_file", default="metrics.txt", help="Output file name")
-    parser.add_argument("--snr_file_path", default="", help="Path to file containing which images to run evaluation on")
+    parser.add_argument("--data-dir", default="sample_jsons", help="Path of gt and pred files")
+    parser.add_argument("--gt-json", default="ground_truth_boxes.json", help="GT file name")
+    parser.add_argument("--pred-json", default="predicted_boxes.json", help="Pred file name")
+    parser.add_argument("--txt-file", default="metrics.txt", help="Output file name")
+    parser.add_argument("--snr-file-path", default="", help="Path to file containing which images to run evaluation on")
+    parser.add_argument("--subdataset", default="", help="Isolate dataset")
 
     args = parser.parse_args()
 
